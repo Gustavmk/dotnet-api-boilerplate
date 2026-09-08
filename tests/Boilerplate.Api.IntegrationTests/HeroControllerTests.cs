@@ -1,8 +1,11 @@
 ﻿using Boilerplate.Api.IntegrationTests.Common;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using FluentAssertions;
 using Boilerplate.Application.Common.Responses;
+using Boilerplate.Application.Extensions;
 using Boilerplate.Application.Features.Heroes;
 using Boilerplate.Application.Features.Heroes.CreateHero;
 using Boilerplate.Application.Features.Heroes.GetAllHeroes;
@@ -168,6 +171,37 @@ public class HeroControllerTests : BaseTest
         json!.Id.Should().NotBe(HeroId.Empty);
         json.Name.Should().NotBeNull();
         json.HeroType.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Post_ValidHero_EmitsOpenTelemetryActivity()
+    {
+        // Arrange
+        var activities = new List<Activity>();
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == OpenTelemetryExtensions.ServiceName,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            ActivityStopped = activities.Add,
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        var newHero = new CreateHeroRequest
+        {
+            Name = "Instrumented hero",
+            HeroType = HeroType.Student,
+            Individuality = "telemetry",
+        };
+
+        // Act
+        var response = await PostAsync("/api/Hero", newHero);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var activity = activities.Should().ContainSingle(a => a.OperationName == "CreateHero").Subject;
+        activity.GetTagItem("hero.name").Should().Be("Instrumented hero");
+        activity.GetTagItem("hero.type").Should().Be(nameof(HeroType.Student));
+        activity.GetTagItem("hero.id").Should().NotBeNull();
     }
 
     [Fact]
