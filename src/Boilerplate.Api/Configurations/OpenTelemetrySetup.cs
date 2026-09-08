@@ -30,6 +30,7 @@ public static class OpenTelemetrySetup
         {
             telemetry
                 .AddSource(OpenTelemetryExtensions.ServiceName)
+                .AddEntityFrameworkCoreInstrumentation()
                 .AddAspNetCoreInstrumentation(o =>
                 {
                     o.RecordException = true;
