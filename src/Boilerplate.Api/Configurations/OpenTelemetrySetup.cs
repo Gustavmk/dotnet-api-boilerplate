@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -32,11 +33,15 @@ public static class OpenTelemetrySetup
                 .AddAspNetCoreInstrumentation(o =>
                 {
                     o.RecordException = true;
+                    // Drop Swagger / health-check requests from traces.
+                    o.Filter = ctx => TelemetryFilter.ShouldRecord(ctx.Request.Path);
                 })
                 .AddHttpClientInstrumentation(o =>
                 {
                     o.RecordException = true;
                 })
+                // Captures every SQL command issued to PostgreSQL (Npgsql ActivitySource).
+                .AddNpgsql()
                 .AddOtlpExporter();
         })
             .WithMetrics(telemetry =>

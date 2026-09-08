@@ -22,6 +22,9 @@ builder.Services.AddSwaggerSetup();
 // Persistence
 builder.Services.AddPersistenceSetup(builder.Configuration);
 
+// Health checks (dependency validation + dummy liveness)
+builder.Services.AddHealthCheckSetup();
+
 // Application layer setup
 builder.Services.AddApplicationSetup();
 
@@ -66,6 +69,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
+// Keep Swagger / health-check traffic out of traces and metrics.
+app.UseTelemetryFilter();
+
 app.UseSwaggerSetup();
 //app.UseHsts();
 
@@ -74,6 +80,8 @@ app.UseResponseCompression();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHealthCheckSetup();
 
 app.MapHeroEndpoints();
 app.MapGroup("api/identity")
