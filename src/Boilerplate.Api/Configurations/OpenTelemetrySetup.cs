@@ -42,6 +42,7 @@ public static class OpenTelemetrySetup
             .WithMetrics(telemetry =>
             {
                 telemetry
+                    .AddMeter(OpenTelemetryExtensions.ServiceName)
                     .AddMeter("Microsoft.AspNetCore.Hosting")
                     .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
                     .AddView("http-server-request-duration",
