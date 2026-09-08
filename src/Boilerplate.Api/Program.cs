@@ -67,10 +67,10 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseSwaggerSetup();
-app.UseHsts();
+//app.UseHsts();
 
 app.UseResponseCompression();
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
