@@ -24,7 +24,7 @@ permissions:
 env:
   GITHUB_WORKSPACE: ${{ github.workspace }}
   #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  - Currently not needed, but can be used for future reference
-  REGISTRY: ghcr.io
+  CONTAINER_REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -38,12 +38,12 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ${{ env.CONTAINER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -51,12 +51,12 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}
+          images: ${{ env.CONTAINER_REGISTRY }}/${{ github.repository }}
           # semver tags only apply on the main branch (via git tags); other pushes get sha/branch tags
           tags: |
-            type=semver,pattern={{version}},enable=${{ github.ref_type == 'tag' }}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ github.ref_type == 'tag' }}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            # Minimal/Short SHA tag (e.g., sha-7a1b2c3)
+            type=sha,format=short
+            # Full length/Long SHA tag
             type=sha,format=long
 
       - name: Set up Docker Buildx
